@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SkyEye.UI.MainPage"
+             xmlns:views="clr-namespace:SkyEye.UI.Views">
+
+    <ContentPage.Resources>
+        <Style TargetType="Button" x:Key="MainButtonStyle">
+            <Setter Property="BackgroundColor" Value="#AA1E1E1E"/>
+
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="10, 2, 10, 2"/>
+
+            <Setter Property="BorderWidth" Value="1"/>
+            <Setter Property="BorderColor" Value="Black"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MaximumHeightRequest" Value="100"/>
+
+            <Setter Property="FontSize" Value="25"/>
+            <Setter Property="TextColor" Value="White"/>
+            
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="2*"/>
+
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="10*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Image Grid.ColumnSpan="3" Grid.RowSpan="3" Aspect="AspectFill" Source="C:\Users\barto\Desktop\droneViewPlaceholder.jpg" ZIndex="-1"></Image>
+
+        <StackLayout Grid.Column="0" Grid.RowSpan="3" Orientation="Vertical" VerticalOptions="Center">
+            <Button Style="{StaticResource MainButtonStyle}" Text="Up"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Down"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Left"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Right"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Mode"/>
+            
+        </StackLayout>
+
+        <StackLayout Grid.Column="3" Grid.RowSpan="3" Orientation="Vertical" VerticalOptions="Center">
+            <Button Style="{StaticResource MainButtonStyle}" Text="Zoom In"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Zoom Out"/>
+        </StackLayout>
+
+        <StackLayout Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End"> 
+            <Button Style="{StaticResource MainButtonStyle}" Text="X"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Y"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Z"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Zoom Out"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Zoom In"/>
+            <Button Style="{StaticResource MainButtonStyle}" Text="Zoom Out"/>
+        </StackLayout>
+
+        <views:AnglePresenter></views:AnglePresenter>
+        
+        
+    </Grid>
+
+</ContentPage>
