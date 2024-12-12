@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace SkyEye.Connector
 {
-    internal interface IVideoReceiver
+    public interface IVideoReceiver
     {
-        
+        Task RunVideo();
+        Action NewFrameRecived; 
+
     }
 }
