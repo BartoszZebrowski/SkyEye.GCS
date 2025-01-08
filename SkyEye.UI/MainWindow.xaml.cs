@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -16,9 +18,21 @@ namespace SkyEye.UI
     /// </summary>
     public partial class MainWindow : Window
     {
+        [DllImport("kernel32.dll")]
+        private static extern bool AllocConsole();
+
         public MainWindow()
         {
             InitializeComponent();
+            AllocConsole();
+
+            StreamWriter standardOutput = new StreamWriter(Console.OpenStandardOutput())
+            {
+                AutoFlush = true
+            };
+            Console.SetOut(standardOutput);
+
+            Console.WriteLine("Consol work!");
         }
     }
 }

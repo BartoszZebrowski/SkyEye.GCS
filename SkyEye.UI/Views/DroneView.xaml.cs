@@ -31,11 +31,13 @@ namespace SkyEye.UI.Views
             videoReciver.NewFrameRecived += OnNewFrameRecived;
 
             videoReciver.RunVideo();
+            Console.WriteLine("Inicjalizacja");
+
         }
 
-        private void OnNewFrameRecived()
+        private void OnNewFrameRecived(byte[] data)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Test");
         }
     }
 }
