@@ -1,7 +1,6 @@
 ﻿using Gst;
 using Gst.App;
 using OpenCvSharp;
-using System.Runtime.InteropServices;
 using Task = System.Threading.Tasks.Task;
 
 namespace SkyEye.Connector
@@ -23,8 +22,9 @@ namespace SkyEye.Connector
         }
 
 
-        public async Task RunVideo()
+        public async Task Init()
         {
+
             Application.Init();
 
             _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! decodebin ! appsink name=\"mysink\"") as Pipeline;
@@ -36,40 +36,36 @@ namespace SkyEye.Connector
             {
                 var sinkPad = sink.GetStaticPad("sink");
 
+                
+
                 sinkPad.AddProbe(PadProbeType.Buffer, (pad, info) =>
                 {
                     var buffer = info.Buffer;
 
                     buffer.Map(out MapInfo mapInfo, MapFlags.Read);
 
-                    int width = 640;
-                    int height = 480;
+                    int width = 320;
+                    int height = 240;
                     int channels = 3;
 
+
                     byte[] data = new byte[mapInfo.Data.Length];
+                    byte[] image;
+
 
                     System.Array.Copy(mapInfo.Data, data, mapInfo.Data.Length);
 
                     using (Mat mat = Mat.FromPixelData(height, width, MatType.CV_8UC3, data))
                     {
+                        Cv2.ImShow("Stream", mat);
+                        Cv2.WaitKey(1);
 
-                        try
-                        {
-                            Cv2.ImShow("Stream", mat);
-                            Cv2.WaitKey(1);
-
-                        }
-                        catch (Exception ex)
-                        {
-
-                        }
-
+                        Cv2.ImEncode(".jpg", mat, out image);
                     }
 
 
 
-
-                    //_newFrameRecived.Invoke(mapInfo.Data);
+                    _newFrameRecived.Invoke(image);
                     Console.WriteLine($"Odebrano {mapInfo.Size} bajtów danych.");
 
                     buffer.Unmap(mapInfo);
@@ -78,31 +74,9 @@ namespace SkyEye.Connector
                     return PadProbeReturn.Ok;
                 });
             }
-
-            Play();
-
         }
 
-        //private void OnNewSample(object sender, NewSampleArgs args)
-        //{
-        //    var sample = _appSink.PullSample();
 
-        //    
-        //    var buffer = sample.Buffer;
-        //    var mapInfo = new Gst.MapInfo();
-        //    buffer.Map(out mapInfo, Gst.MapFlags.Read);
-
-        //    try
-        //    {
-        //        Console.WriteLine($"Pobrano klatkę: {mapInfo.Size} bajtów");
-        //        _newFrameRecived.Invoke(mapInfo.Data);
-        //    }
-        //    finally
-        //    {
-        //        buffer.Unmap(mapInfo);
-        //        sample.Dispose();
-        //    }
-        //}
 
         public void Play()
         {

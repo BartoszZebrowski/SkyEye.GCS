@@ -39,7 +39,9 @@
             <ColumnDefinition Width="200"/>
         </Grid.ColumnDefinitions>
 
-        <Image Grid.ColumnSpan="3" Grid.RowSpan="3" Source="C:\Users\barto\Desktop\droneViewPlaceholder.jpg" Panel.ZIndex="-1"></Image>
+        <Image x:Name="_mediaPlayer" Stretch="Uniform" Grid.ColumnSpan="3" Grid.RowSpan="3" Source="C:\Users\barto\Desktop\droneViewPlaceholder.jpg" Panel.ZIndex="-1"></Image>
+
+        <!--Source="C:\Users\barto\Desktop\droneViewPlaceholder.jpg"-->
 
         <StackPanel Grid.Column="0" Grid.RowSpan="3" Orientation="Vertical" VerticalAlignment="Center">
             <Button Style="{StaticResource MainButtonStyle}" Content="Up"/>
