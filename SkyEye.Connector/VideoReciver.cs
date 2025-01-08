@@ -1,6 +1,7 @@
 ﻿using Gst;
 using Gst.App;
 using OpenCvSharp;
+using System.Runtime.InteropServices;
 using Task = System.Threading.Tasks.Task;
 
 namespace SkyEye.Connector
@@ -41,16 +42,28 @@ namespace SkyEye.Connector
 
                     buffer.Map(out MapInfo mapInfo, MapFlags.Read);
 
-                    int width = 1920;
-                    int height = 1080;
+                    int width = 640;
+                    int height = 480;
                     int channels = 3;
 
-                    using (Mat mat = new Mat(width, height, MatType.CV_8UC3))
-                    {
-                        mat.SetArray(mapInfo.Data);
+                    byte[] data = new byte[mapInfo.Data.Length];
 
-                        Cv2.ImShow("Stream", mat);
-                        Cv2.WaitKey(1);
+                    System.Array.Copy(mapInfo.Data, data, mapInfo.Data.Length);
+
+                    using (Mat mat = Mat.FromPixelData(height, width, MatType.CV_8UC3, data))
+                    {
+
+                        try
+                        {
+                            Cv2.ImShow("Stream", mat);
+                            Cv2.WaitKey(1);
+
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+
                     }
 
 
