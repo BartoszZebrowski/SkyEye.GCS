@@ -53,11 +53,12 @@ namespace SkyEye.UI.Views
 
             videoReciver.Init();
             videoReciver.Play();
+            Console.WriteLine("Dupa");
 
             Console.WriteLine("Inicjalizacja");
 
             videoTimer = new DispatcherTimer();
-            videoTimer.Interval = TimeSpan.FromSeconds(1/30);
+            videoTimer.Interval = TimeSpan.FromSeconds(1/60);
             videoTimer.Tick += RenderVideo;
             videoTimer.Start();
 
@@ -66,7 +67,17 @@ namespace SkyEye.UI.Views
         private void OnNewFrameRecived(byte[] data)
         {
             lock (frameBuffor)
-                frameBuffor.Add(data);
+            {
+                if(frameBuffor.Count > 10)
+                {
+                    frameBuffor.Remove(frameBuffor.First());
+                    frameBuffor.Add(data);
+                }
+                else
+                {
+                    frameBuffor.Add(data);
+                }
+            }
         }
 
         private void RenderVideo(object? sender, EventArgs e)

@@ -27,7 +27,7 @@ namespace SkyEye.Connector
 
             Application.Init();
 
-            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! decodebin ! appsink name=\"mysink\"") as Pipeline;
+            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! decodebin ! appsink name=\"mysink\" max-buffers=10 drop=true") as Pipeline;
 
 
             var sink = _pipeline.GetByName("mysink");
@@ -40,7 +40,7 @@ namespace SkyEye.Connector
 
                 sinkPad.AddProbe(PadProbeType.Buffer, (pad, info) =>
                 {
-                    var buffer = info.Buffer;
+                    using var buffer = info.Buffer;
 
                     buffer.Map(out MapInfo mapInfo, MapFlags.Read);
 
