@@ -27,7 +27,7 @@ namespace SkyEye.Connector
 
             Application.Init();
 
-            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! decodebin ! appsink name=\"mysink\" max-buffers=10 drop=true") as Pipeline;
+            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, format=RGB ! appsink name=\"mysink\" max-buffers=10 drop=true") as Pipeline;
 
 
             var sink = _pipeline.GetByName("mysink");
@@ -36,42 +36,51 @@ namespace SkyEye.Connector
             {
                 var sinkPad = sink.GetStaticPad("sink");
 
-                
-
                 sinkPad.AddProbe(PadProbeType.Buffer, (pad, info) =>
                 {
-                    using var buffer = info.Buffer;
-
-                    buffer.Map(out MapInfo mapInfo, MapFlags.Read);
-
-                    int width = 320;
-                    int height = 240;
-                    int channels = 3;
-
-
-                    byte[] data = new byte[mapInfo.Data.Length];
-                    byte[] image;
-
-
-                    System.Array.Copy(mapInfo.Data, data, mapInfo.Data.Length);
-
-                    using (Mat mat = Mat.FromPixelData(height, width, MatType.CV_8UC3, data))
+                    using (var buffer = info.Buffer)
                     {
-                        Cv2.ImShow("Stream", mat);
-                        Cv2.WaitKey(1);
+                        buffer.Map(out MapInfo mapInfo, MapFlags.Read);
 
-                        Cv2.ImEncode(".jpg", mat, out image);
+                        int width = 1280;
+                        int height = 720;
+                        int channels = 3;
+
+
+                        byte[] data = new byte[mapInfo.Data.Length];
+                        byte[] image;
+
+
+                        System.Array.Copy(mapInfo.Data, data, mapInfo.Data.Length);
+
+                        //using (Mat mat = Mat.FromPixelData(height, width, MatType.CV_16SC4, mapInfo.Data))
+                        //{
+                        //    //CV_8UC3
+                        //    if (mat == null || mat.Empty())
+                        //    {
+                        //        Console.WriteLine("Macierz obrazu jest pusta lub niezainicjalizowana!");
+                        //    }
+                        //    else
+                        //    {
+                        //        Cv2.ImShow("Stream", mat);
+                        //    }
+
+                        //    //Cv2.ImEncode(".jpg", mat, out image);
+                        //}
+
+                        
+
+                        _newFrameRecived.Invoke(data);
+
+                        Console.WriteLine($"Odebrano {mapInfo.Size} bajtów danych.");
+
+                        buffer.Unmap(mapInfo);
+
+
+                        return PadProbeReturn.Ok;
                     }
 
 
-
-                    _newFrameRecived.Invoke(image);
-                    Console.WriteLine($"Odebrano {mapInfo.Size} bajtów danych.");
-
-                    buffer.Unmap(mapInfo);
-
-
-                    return PadProbeReturn.Ok;
                 });
             }
         }
