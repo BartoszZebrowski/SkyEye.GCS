@@ -27,7 +27,7 @@ namespace SkyEye.Connector
 
             Application.Init();
 
-            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, format=RGB ! appsink name=\"mysink\" max-buffers=10 drop=true") as Pipeline;
+            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! d3d11h264dec ! videoconvert ! video/x-raw, format=RGB ! appsink name=\"mysink\" max-buffers=10 drop=true") as Pipeline;
 
 
             var sink = _pipeline.GetByName("mysink");
