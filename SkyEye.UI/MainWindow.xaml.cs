@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using SkyEye.Connector.CommandService;
+using SkyEye.Connector.MessagesService.Messages.MessageRequests;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -33,6 +35,22 @@ namespace SkyEye.UI
             Console.SetOut(standardOutput);
 
             Console.WriteLine("Consol work!");
+
+            ConnectToServer().GetAwaiter().GetResult();
+        }
+
+
+        private async Task ConnectToServer()
+        {
+            TCPMessageClient TCPMessageClient = new TCPMessageClient();
+            var setHorizontalAngleRequest = new SetHorizontalAngleRequest("2");
+
+
+            await TCPMessageClient.ConnectAsync("192.168.1.42", 5001);
+
+            await TCPMessageClient.SendMessageAsync(setHorizontalAngleRequest);
+
+
         }
     }
 }

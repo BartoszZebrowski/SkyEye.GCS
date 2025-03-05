@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 
 namespace SkyEye.Connector.MessagesService.Messages.MessageRequests
 {
-    internal class SetVerticalAngleRequest
+    internal class SetVerticalAngleRequest : IMessageRequest
     {
-        public MessageType CommandType { get => MessageType.HorizontalAngle; }
 
         private string _message;
 
@@ -22,5 +21,7 @@ namespace SkyEye.Connector.MessagesService.Messages.MessageRequests
         {
             get => _message;
         }
+
+        public MessageType MessageType => throw new NotImplementedException();
     }
 }

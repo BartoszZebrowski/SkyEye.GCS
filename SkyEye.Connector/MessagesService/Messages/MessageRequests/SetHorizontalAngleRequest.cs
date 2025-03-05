@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace SkyEye.Connector.MessagesService.Messages.MessageRequests
 {
-    internal class SetHorizontalAngleRequest : IMessageRequest
+    public class SetHorizontalAngleRequest : IMessageRequest
     {
         public MessageType CommandType { get => MessageType.HorizontalAngle; }
 
@@ -17,6 +17,8 @@ namespace SkyEye.Connector.MessagesService.Messages.MessageRequests
         {
             get => _message;
         }
+
+        public MessageType MessageType => MessageType.HorizontalAngle;
 
         public SetHorizontalAngleRequest(string message)
         {

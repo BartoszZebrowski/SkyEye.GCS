@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace SkyEye.Connector.MessagesService.Messages.Abstractions
 {
-    public interface IMessageResponse
+    public interface IMessageResponse<T>
     {
         event Action<string> MessageRecived;
-
         MessageType MessageType { get; }
-        void Deserialize(byte[] response);
+        T Value { get; }
+        T Deserialize(byte[] response);
     }
 }
