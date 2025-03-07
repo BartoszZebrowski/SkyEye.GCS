@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SkyEye.Connector.Models
+namespace SkyEye.Connector.MessagesService
 {
-    public class Angle
+    public enum RemoteValueResponseType
     {
-        public float Value { get; set; }
-
-
-
+        WithResponse,
+        WithoutRespons
     }
 }

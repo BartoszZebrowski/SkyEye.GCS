@@ -1,5 +1,6 @@
 ﻿using SkyEye.Connector.CommandService;
-using SkyEye.Connector.MessagesService.Messages.MessageRequests;
+using SkyEye.Connector.MessagesService;
+using SkyEye.UI.Views;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,10 +24,12 @@ namespace SkyEye.UI
         [DllImport("kernel32.dll")]
         private static extern bool AllocConsole();
 
-        public MainWindow()
+        public MainWindow(DroneView droneView)
         {
             InitializeComponent();
             AllocConsole();
+
+            MainFrame.Navigate(droneView);
 
             StreamWriter standardOutput = new StreamWriter(Console.OpenStandardOutput())
             {
@@ -35,22 +38,6 @@ namespace SkyEye.UI
             Console.SetOut(standardOutput);
 
             Console.WriteLine("Consol work!");
-
-            ConnectToServer().GetAwaiter().GetResult();
-        }
-
-
-        private async Task ConnectToServer()
-        {
-            TCPMessageClient TCPMessageClient = new TCPMessageClient();
-            var setHorizontalAngleRequest = new SetHorizontalAngleRequest("2");
-
-
-            await TCPMessageClient.ConnectAsync("192.168.1.42", 5001);
-
-            await TCPMessageClient.SendMessageAsync(setHorizontalAngleRequest);
-
-
         }
     }
 }

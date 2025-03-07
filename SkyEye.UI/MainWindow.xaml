@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SkyEye.UI"
         xmlns:views="clr-namespace:SkyEye.UI.Views"
-        
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     
-        <views:DroneView></views:DroneView>
+    <Frame Name="MainFrame" />
+
 </Window>

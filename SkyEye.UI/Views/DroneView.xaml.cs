@@ -38,22 +38,18 @@ namespace SkyEye.UI.Views
     /// </summary>
     public partial class DroneView : Page
     {
-        List<byte[]> frameBuffor = new();
-
         byte[] frame;
-
         private DispatcherTimer videoTimer;
 
 
-        public DroneView()
+        public DroneView(DroneViewModel droneViewModel)
         {
+            DataContext = droneViewModel;
+
             InitializeComponent();
 
-            //var droneViewModel = new DroneViewModel();
-            //droneViewModel.PropertyChanged += Update;
+            _hud.SizeChanged += HudSizeChanged;
 
-
-            //DataContext = droneViewModel;
 
             IVideoReceiver videoReciver = new VideoReceiver();
             videoReciver.NewFrameRecived += OnNewFrameRecived;
@@ -69,6 +65,14 @@ namespace SkyEye.UI.Views
             videoTimer.Tick += RenderVideo;
             videoTimer.Start();
 
+        }
+
+        private void HudSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            double centerX = (_hud.ActualWidth - _gimbalPositionAreaEllipse.Width) / 2;
+            double centerY = (_hud.ActualHeight - _gimbalPositionAreaEllipse.Height) / 2;
+            _gimbalPositionAreaEllipseTransform.X = centerX;
+            _gimbalPositionAreaEllipseTransform.Y = centerY;
         }
 
         private void OnNewFrameRecived(byte[] data)
