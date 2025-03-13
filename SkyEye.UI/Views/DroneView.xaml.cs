@@ -40,15 +40,16 @@ namespace SkyEye.UI.Views
     {
         byte[] frame;
         private DispatcherTimer videoTimer;
-
+        private DroneViewModel _droneViewModel;
 
         public DroneView(DroneViewModel droneViewModel)
         {
+            _droneViewModel = droneViewModel;
             DataContext = droneViewModel;
 
             InitializeComponent();
 
-            _hud.SizeChanged += HudSizeChanged;
+            _hud.SizeChanged += UpdateSize;
 
 
             IVideoReceiver videoReciver = new VideoReceiver();
@@ -67,13 +68,24 @@ namespace SkyEye.UI.Views
 
         }
 
-        private void HudSizeChanged(object sender, SizeChangedEventArgs e)
+        private void UpdateSize(object sender, SizeChangedEventArgs e)
         {
             double centerX = (_hud.ActualWidth - _gimbalPositionAreaEllipse.Width) / 2;
             double centerY = (_hud.ActualHeight - _gimbalPositionAreaEllipse.Height) / 2;
             _gimbalPositionAreaEllipseTransform.X = centerX;
             _gimbalPositionAreaEllipseTransform.Y = centerY;
         }
+
+        private void UpdateStabilizatorPosition()
+        {
+            double centerX = (_hud.ActualWidth - _gimbalPositionAreaEllipse.Width) / 2;
+            double centerY = (_hud.ActualHeight - _gimbalPositionAreaEllipse.Height) / 2;
+
+            _gimbalPositionDotTransform.X = centerX + _droneViewModel.VerticalAxis;
+            _gimbalPositionDotTransform.X = centerX + _droneViewModel.HorisonalAxis;
+        }
+
+
 
         private void OnNewFrameRecived(byte[] data)
         {
@@ -87,7 +99,7 @@ namespace SkyEye.UI.Views
             if (frame == null)
                 return;
 
-            _mediaPlayer.Source = CreateBitmapFromRawData(frame, 1920, 1080, 3);
+            _mediaPlayer.Source = CreateBitmapFromRawData(frame, 1280, 720, 3);
 
         }
 

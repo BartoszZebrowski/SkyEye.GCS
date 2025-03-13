@@ -1,5 +1,6 @@
 ﻿using SkyEye.Connector.CommandService;
 using SkyEye.Connector.MessagesService;
+using SkyEye.Connector.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,25 +11,25 @@ namespace SkyEye.Connector.Datalink
 {
     public class Datalink
     {
-        private TCPMessageClient _tcpMessageClient;
-        private List<object> _remoteValues = new();
+        public List<IRemoteValue> RemoteValues { get; private set; } = new();
 
-        public Datalink(TCPMessageClient tcpMessageClient)
+        public Datalink()
         {
-            _tcpMessageClient = tcpMessageClient;
             CreateRemoteValues();
         }
 
         public RemoteValue<T> GetRemoteValue<T>(RemoteValueType remoteValueType)
         {
-            return (RemoteValue<T>)_remoteValues.Where(remoteValue => ((RemoteValue<T>)remoteValue).RemoteValueType == remoteValueType).First();
+            return (RemoteValue<T>)RemoteValues.Where(remoteValue => remoteValue.RemoteValueType == remoteValueType).First();
         }
 
         private void CreateRemoteValues()
         {
-            _remoteValues.Add(new RemoteValue<int>(_tcpMessageClient, RemoteValueType.HorisonalAxis));
-            _remoteValues.Add(new RemoteValue<int>(_tcpMessageClient, RemoteValueType.VerticalAxis));
-            _remoteValues.Add(new RemoteValue<int>(_tcpMessageClient, RemoteValueType.WorkingMode));
+            RemoteValues.Add(new RemoteValue<WorkingMode>(RemoteValueType.WorkingMode, RemoteValueMode.ReadAndWrite));
+            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.TargetHorizontalAngle, RemoteValueMode.ReadAndWrite));
+            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.TargetVerticalAngle, RemoteValueMode.ReadAndWrite));
+            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.ActualHorizontaAngle, RemoteValueMode.ReadOnly));
+            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.ActualVerticalAngle, RemoteValueMode.ReadOnly));
         }
     }
 }

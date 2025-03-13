@@ -1,4 +1,5 @@
 ﻿using SkyEye.Connector.CommandService;
+using SkyEye.Connector.Datalink;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,32 +8,51 @@ using System.Threading.Tasks;
 
 namespace SkyEye.Connector.MessagesService
 {
-    public class RemoteValue<T>
+    public class RemoteValue<T> : IRemoteValue
     {
-        public RemoteValueType RemoteValueType;
-        private RemoteValueResponseType RemoteValueResponseType;
+        public event Action<T> ValueChanged;
 
-        private TCPMessageClient _tcpMessageClient;
-        private T _value = default;
+        public RemoteValueType RemoteValueType { get; init; }
+        public RemoteValueMode RemoteValueMode { get; init; }
 
-        public RemoteValue(TCPMessageClient tcpMessageClient,
-            RemoteValueType remoteValueType,
-            RemoteValueResponseType remoteValueResponseType = RemoteValueResponseType.WithResponse)
+        private bool _toUpdate = false;
+        public bool ToUpdate 
+        { 
+            get => _toUpdate; 
+            set => _toUpdate = value; 
+        } 
+
+        private T _value;
+        private T _valueToUpdate;
+
+        public T Value
         {
-            _tcpMessageClient = tcpMessageClient;
-            RemoteValueResponseType = remoteValueResponseType;
+            get
+            {
+                return _value;
+            }
+            set
+            {
+                _valueToUpdate = value;
+                ToUpdate = true;
+            }
+        }
+
+        public RemoteValue(RemoteValueType remoteValueType, RemoteValueMode remoteValueMode)
+        {
             RemoteValueType = remoteValueType;
+            RemoteValueMode = remoteValueMode;
         }
 
-        public async Task<T> Get()
+        internal void UpdateValue(T value)
         {
-            _value = await _tcpMessageClient.GetValue<T>(RemoteValueType);
-            return _value;
+            _value = value;
+            ValueChanged?.Invoke(_value);
         }
 
-        public async Task Set(T value)
+        internal T GetValueToUpdate()
         {
-            _value = await _tcpMessageClient.SetValue<T>(RemoteValueType, value);
+            return _valueToUpdate;
         }
     }
 }

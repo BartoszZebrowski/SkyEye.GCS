@@ -24,11 +24,10 @@ namespace SkyEye.Connector
 
         public async Task Init()
         {
-
             Application.Init();
 
-            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! d3d11h264dec ! videoconvert ! video/x-raw, format=RGB ! appsink name=\"mysink\" max-buffers=10 drop=true") as Pipeline;
 
+            _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! openh264dec ! videoconvert ! video/x-raw, format=RGB ! appsink name=\"mysink\" max-buffers=50 drop=true") as Pipeline;
 
             var sink = _pipeline.GetByName("mysink");
 
@@ -46,29 +45,10 @@ namespace SkyEye.Connector
                         int height = 720;
                         int channels = 3;
 
-
                         byte[] data = new byte[mapInfo.Data.Length];
                         byte[] image;
 
-
                         System.Array.Copy(mapInfo.Data, data, mapInfo.Data.Length);
-
-                        //using (Mat mat = Mat.FromPixelData(height, width, MatType.CV_16SC4, mapInfo.Data))
-                        //{
-                        //    //CV_8UC3
-                        //    if (mat == null || mat.Empty())
-                        //    {
-                        //        Console.WriteLine("Macierz obrazu jest pusta lub niezainicjalizowana!");
-                        //    }
-                        //    else
-                        //    {
-                        //        Cv2.ImShow("Stream", mat);
-                        //    }
-
-                        //    //Cv2.ImEncode(".jpg", mat, out image);
-                        //}
-
-                        
 
                         _newFrameRecived.Invoke(data);
 
@@ -76,11 +56,8 @@ namespace SkyEye.Connector
 
                         buffer.Unmap(mapInfo);
 
-
                         return PadProbeReturn.Ok;
                     }
-
-
                 });
             }
         }

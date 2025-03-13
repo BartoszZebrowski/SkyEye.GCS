@@ -1,17 +1,10 @@
-﻿using Gst.Video;
-using SkyEye.Connector;
-using SkyEye.Connector.Datalink;
+﻿using SkyEye.Connector.Datalink;
 using SkyEye.Connector.MessagesService;
 using SkyEye.UI.Commands;
 using SkyEye.UI.Common;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using Timer = System.Timers.Timer;
 
 namespace SkyEye.UI.ViewModels
 {
@@ -19,44 +12,44 @@ namespace SkyEye.UI.ViewModels
     {
         //do wywalenia pewnie całosc
         public BitmapImage VideoFrame { get; private set; }
-
         public IncreesAngleControlCommand IncreesAngleControlCommand { get; private set; }
-        public int HorisonalAxis { get; private set; }
+        public ChangeModeCommand ChangeModeCommand { get; private set; }
+
+        private int _horisonalAxis;
+        public int HorisonalAxis 
+        {
+            get => _horisonalAxis;
+            private set => SetField(ref _horisonalAxis, value); 
+        }
+
+        private int _verticalAxis;
+        public int VerticalAxis {
+            get => _verticalAxis;
+            private set 
+            {
+                _verticalAxis = value;
+                OnPropertyChanged(nameof(VerticalAxis));
+            }
+        }
 
         private Datalink _datalink;
 
-
-        public DroneViewModel(Datalink datalink, IncreesAngleControlCommand increesAngleControlCommand)
+        public DroneViewModel(Datalink datalink, IncreesAngleControlCommand increesAngleControlCommand, ChangeModeCommand changeModeCommand)
         {
             _datalink = datalink;
 
-            IVideoReceiver videoReciver = new VideoReceiver();
-            videoReciver.NewFrameRecived += OnNewFrameRecived;
-
-            videoReciver.Init();
-            videoReciver.Play();
-
-
             IncreesAngleControlCommand = increesAngleControlCommand;
+            ChangeModeCommand = changeModeCommand;
+
+            _datalink.GetRemoteValue<int>(RemoteValueType.TargetVerticalAngle).ValueChanged 
+                += value => VerticalAxis = value;
+
+            _datalink.GetRemoteValue<int>(RemoteValueType.TargetHorizontalAngle).ValueChanged
+                += value => HorisonalAxis = value;
+
+            OnPropertyChanged();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
-
-        private void OnNewFrameRecived(byte[] data)
-        {
-            using (MemoryStream stream = new MemoryStream(data))
-            {
-                // Tworzymy BitmapImage z MemoryStream
-                BitmapImage bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.StreamSource = stream;
-                bitmap.EndInit();
-
-                // Przypisujemy BitmapImage do Image w WPF
-                VideoFrame = bitmap;
-
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("VideoFrame"));
-            }
-        }
     }
 }

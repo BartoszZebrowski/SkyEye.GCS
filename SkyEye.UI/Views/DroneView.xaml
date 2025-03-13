@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:SkyEye.UI.Views"
       xmlns:dataContext="clr-namespace:SkyEye.UI.ViewModels"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
+      d:DesignHeight="720" d:DesignWidth="1280"
       Title="DroneView">
     <Page.Resources>
 
@@ -55,7 +55,7 @@
 
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="140"/>
+            <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="10*"/>
             <ColumnDefinition Width="180"/>
         </Grid.ColumnDefinitions>
@@ -64,6 +64,7 @@
 
         <Canvas x:Name="_hud" Grid.ColumnSpan="3" Grid.RowSpan="4">
 
+            <!--Kolo-->
             <Ellipse x:Name="_gimbalPositionAreaEllipse" Width="350" Height="350" Stroke="#77FFFFFF" StrokeThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Ellipse.RenderTransform>
                     <TranslateTransform x:Name="_gimbalPositionAreaEllipseTransform"/>
@@ -76,15 +77,26 @@
                 </Ellipse.RenderTransform>
             </Ellipse>
 
+            <!--Celownik-->
+            <Line StrokeThickness="2" X1="62" Y1="0" X2="62" Y2="50" Canvas.Left="50" Stroke="#AAFFFFFF"></Line>
+            <Line StrokeThickness="2" X1="62" Y1="75" X2="62" Y2="125" Canvas.Left="50" Stroke="#AAFFFFFF"></Line>
+            <Line StrokeThickness="2" X1="0" Y1="62" X2="50" Y2="62" Canvas.Left="50" Stroke="#AAFFFFFF"></Line>
+            <Line StrokeThickness="2" X1="75" Y1="62" X2="125" Y2="62" Canvas.Left="50" Stroke="#AAFFFFFF"></Line>
+
         </Canvas>
 
 
 
-        <StackPanel Grid.Column="0" Grid.RowSpan="3" Orientation="Vertical" VerticalAlignment="Center">
-            <Button Width="120" Style="{StaticResource MainButtonStyle}" Content="Mode1"/>
-            <Button Width="120" Style="{StaticResource MainButtonStyle}" Content="Mode2"/>
-            <Button Width="120" Style="{StaticResource MainButtonStyle}" Content="Mode3"/>
+        <StackPanel Grid.Column="0" Grid.RowSpan="4" Orientation="Vertical" VerticalAlignment="Center">
+            <Button Width="180" Style="{StaticResource MainButtonStyle}" Content="ManualMode" Command="{Binding ChangeModeCommand}" CommandParameter="ManualMode"/>
+            <Button Width="180" Style="{StaticResource MainButtonStyle}" Content="FollowMode" Command="{Binding ChangeModeCommand}" CommandParameter="FollowMode"/>
         </StackPanel>
+
+        <StackPanel Grid.Column="0" Grid.RowSpan="4" Orientation="Vertical" VerticalAlignment="Center">
+            <Button Width="180" Style="{StaticResource MainButtonStyle}" Content="ManualMode" Command="{Binding ChangeModeCommand}" CommandParameter="ManualMode"/>
+            <Button Width="180" Style="{StaticResource MainButtonStyle}" Content="FollowMode" Command="{Binding ChangeModeCommand}" CommandParameter="FollowMode"/>
+        </StackPanel>
+
 
         <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="1" Grid.RowSpan="1" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Style="{StaticResource MainButtonStyle}" Content="Up" Command="{Binding IncreesAngleControlCommand}" CommandParameter="Up"/>
@@ -99,6 +111,11 @@
             <Button Style="{StaticResource MainButtonStyle}" Content="Down" Command="{Binding IncreesAngleControlCommand}" CommandParameter="Down"/>
         </StackPanel>
 
-
+        <StackPanel Grid.Row="3" Grid.Column="1">
+            <Label Foreground="White" FontSize="30" Content="{Binding VerticalAxis}"></Label>
+            
+        </StackPanel>
+        
+        
     </Grid>
 </Page>

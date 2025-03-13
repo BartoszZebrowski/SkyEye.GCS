@@ -1,30 +1,26 @@
-﻿using Gst.Rtsp;
-using SkyEye.Connector.Datalink;
-using SkyEye.Connector.MessagesService;
-using SkyEye.Connector.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Text;
-using System.Text;
+using System.Threading.Tasks;
+using System.Net.WebSockets;
+using SkyEye.Connector.MessagesService;
 
-
-namespace SkyEye.Connector.CommandService
+namespace SkyEye.Connector.Datalink
 {
-    public class TCPMessageClient
+    public class WebsocketClient
     {
-        public event Action<string>? MessageReceived;
 
-        private TcpClient? _client;
-        private NetworkStream? _stream;
-        private Datalink.Datalink _datalink;
+        private ClientWebSocket _clientWebSocket;
+        private Uri _serverUri;
+        private Datalink _datalink;
 
-        public TCPMessageClient(string ip, int port, Datalink.Datalink datalink) 
+        public WebsocketClient(string adressIp, int port, Datalink datalink)
         {
             _datalink = datalink;
-
-            ConnectAsync(ip, port);
+            _clientWebSocket = new ClientWebSocket();
+            _serverUri = new Uri($"ws://{adressIp}:{port}");
+            _clientWebSocket.ConnectAsync(_serverUri, CancellationToken.None);
         }
 
         public async void UpdateRemoteValues()
@@ -36,12 +32,6 @@ namespace SkyEye.Connector.CommandService
                 await SetValue(remoteValue);
         }
 
-        public void ConnectAsync(string ip, int port)
-        {
-            _client = new TcpClient();
-            _client.Connect(ip, port);
-            _stream = _client.GetStream();
-        }
         internal async Task GetValue(IRemoteValue remoteValue)
         {
             string message = $"{(int)remoteValue.RemoteValueType};0;0";
@@ -96,7 +86,6 @@ namespace SkyEye.Connector.CommandService
                 message = $"{(int)remoteValue.RemoteValueType};1;{(int)enumRemoteValue.GetValueToUpdate()}";
             }
 
-
             await SendAndReciveAsync(message);
 
             remoteValue.ToUpdate = false;
@@ -104,22 +93,14 @@ namespace SkyEye.Connector.CommandService
 
         private async Task<string> SendAndReciveAsync(string message)
         {
-            await _stream.WriteAsync(Encoding.UTF8.GetBytes(message));
+            byte[] buffer = Encoding.UTF8.GetBytes(message);
+            5await _clientWebSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
 
-            byte[] buffer = new byte[1024];
+            byte[] receiveBuffer = new byte[1024];
+            WebSocketReceiveResult result = await _clientWebSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
+            string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, result.Count);
 
-            while (_client?.Connected == true)
-            {
-                int bytesRead = await _stream!.ReadAsync(buffer);
-                if (bytesRead > 0)
-                {
-                    return Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                }
-            }
-
-            throw new Exception("Cos sie zjebalo");
+            return receivedMessage;
         }
-
-
     }
 }

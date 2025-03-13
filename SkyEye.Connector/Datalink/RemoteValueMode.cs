@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace SkyEye.Connector.MessagesService
 {
-    public enum RemoteValueResponseType
+    public enum RemoteValueMode
     {
-        WithResponse,
-        WithoutRespons
+        ReadOnly,
+        WriteOnly,
+        ReadAndWrite
     }
 }

@@ -8,8 +8,10 @@ namespace SkyEye.Connector.MessagesService
 {
     public enum RemoteValueType
     {
-        HorisonalAxis,
-        VerticalAxis,
-        WorkingMode,
+        WorkingMode = 0,
+        TargetHorizontalAngle,
+        TargetVerticalAngle,
+        ActualHorizontaAngle,
+        ActualVerticalAngle,
     }
 }
