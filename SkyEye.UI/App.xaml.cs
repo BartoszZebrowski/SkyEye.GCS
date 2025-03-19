@@ -20,7 +20,9 @@ namespace SkyEye.UI
     {
         public IServiceProvider ServiceProvider { get; private set; }
 
-        DispatcherTimer _dispatcherTimer = new DispatcherTimer();
+        DispatcherTimer _updateRemoteValuesTimer = new DispatcherTimer();
+
+        UdpMessageClient _TCPMessageClient;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -30,18 +32,19 @@ namespace SkyEye.UI
             var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
 
-            var TCPMessageClient = ServiceProvider.GetRequiredService<WebsocketClient>();
+            _TCPMessageClient = ServiceProvider.GetRequiredService<UdpMessageClient>();
 
-            _dispatcherTimer = new DispatcherTimer
+            _updateRemoteValuesTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(200)
-            };
-            _dispatcherTimer.Tick += (sender, e) =>
-            {
-                TCPMessageClient.UpdateRemoteValues();
+                Interval = TimeSpan.FromMilliseconds(100)
             };
 
-            _dispatcherTimer.Start();
+            _updateRemoteValuesTimer.Tick += (sender, e) =>
+            {
+                _TCPMessageClient.SynchroniseRemoteValues();
+            };
+
+            _updateRemoteValuesTimer.Start();
         }
 
         private void ConfigureServices()
@@ -50,8 +53,8 @@ namespace SkyEye.UI
 
             serviceCollection.AddSingleton<Datalink>();
 
-            serviceCollection.AddSingleton<WebsocketClient>(provider => 
-            new WebsocketClient(
+            serviceCollection.AddSingleton<UdpMessageClient>(provider => 
+            new UdpMessageClient(
                 "192.168.1.42",
                 5001,
                 ServiceProvider.GetRequiredService<Datalink>()));
@@ -62,14 +65,7 @@ namespace SkyEye.UI
             serviceCollection.AddSingleton<DroneViewModel>();
             serviceCollection.AddSingleton<MainWindow>();
 
-
             ServiceProvider = serviceCollection.BuildServiceProvider();
-
-
-
-
-
         }
-
     }
 }

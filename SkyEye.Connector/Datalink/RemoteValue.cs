@@ -46,8 +46,11 @@ namespace SkyEye.Connector.MessagesService
 
         internal void UpdateValue(T value)
         {
-            _value = value;
-            ValueChanged?.Invoke(_value);
+            lock (this)
+            {
+                _value = value;
+                ValueChanged?.Invoke(_value);
+            }
         }
 
         internal T GetValueToUpdate()
