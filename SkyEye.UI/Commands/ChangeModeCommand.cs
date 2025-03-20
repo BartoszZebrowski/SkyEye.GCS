@@ -14,11 +14,11 @@ namespace SkyEye.UI.Commands
     {
         public event EventHandler? CanExecuteChanged;
 
-        private RemoteValue<WorkingMode> _workingModeRemoteValue;
+        private RemoteValue<int> _workingModeRemoteValue;
 
         public ChangeModeCommand(Datalink datalink)
         {
-            _workingModeRemoteValue = datalink.GetRemoteValue<WorkingMode>(RemoteValueType.WorkingMode);
+            _workingModeRemoteValue = datalink.GetRemoteValue<int>((int)RemoteValueType.WorkingMode);
         }
 
         public bool CanExecute(object? parameter)
@@ -31,10 +31,10 @@ namespace SkyEye.UI.Commands
             switch ((string)parameter)
             {
                 case "ManualMode":
-                    _workingModeRemoteValue.Value = WorkingMode.ManualMode;
+                    _workingModeRemoteValue.Value = (int)WorkingMode.ManualMode;
                     break;
                 case "FollowMode":
-                    _workingModeRemoteValue.Value = WorkingMode.FollowMode;
+                    _workingModeRemoteValue.Value = (int)WorkingMode.FollowMode;
                     break;
             }
         }

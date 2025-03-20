@@ -1,34 +1,11 @@
 ﻿using SkyEye.Connector;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using SkyEye.Connector;
-using System.Collections;
-using System.IO;
 using SkyEye.UI.ViewModels;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Windows.Threading;
-using System.Drawing;
-using static System.Net.Mime.MediaTypeNames;
-using static OpenCvSharp.LineIterator;
-using System.Windows.Ink;
-using System.Windows.Media.Media3D;
-using System.Diagnostics;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using PixelFormat = System.Drawing.Imaging.PixelFormat;
-using Rectangle = System.Drawing.Rectangle;
+
+
 
 
 namespace SkyEye.UI.Views
@@ -38,34 +15,30 @@ namespace SkyEye.UI.Views
     /// </summary>
     public partial class DroneView : Page
     {
-        byte[] frame;
-        private DispatcherTimer videoTimer;
+        private byte[] _frame;
+        private DispatcherTimer _videoTimer;
         private DroneViewModel _droneViewModel;
+        private IVideoReceiver _videoReciver;
 
-        public DroneView(DroneViewModel droneViewModel)
+        public DroneView(DroneViewModel droneViewModel, IVideoReceiver videoReciver)
         {
-            _droneViewModel = droneViewModel;
+            InitializeComponent();
             DataContext = droneViewModel;
 
-            InitializeComponent();
+            _droneViewModel = droneViewModel;
 
-            _hud.SizeChanged += UpdateSize;
-
-
-            IVideoReceiver videoReciver = new VideoReceiver();
-            videoReciver.NewFrameRecived += OnNewFrameRecived;
+            _videoReciver = videoReciver;
+            _videoReciver.NewFrameRecived += OnNewFrameRecived;
 
             videoReciver.Init();
             videoReciver.Play();
-            Console.WriteLine("Dupa");
 
-            Console.WriteLine("Inicjalizacja");
+            _videoTimer = new DispatcherTimer();
+            _videoTimer.Interval = TimeSpan.FromSeconds(1/30);
+            _videoTimer.Tick += RenderVideo;
+            _videoTimer.Start();
 
-            videoTimer = new DispatcherTimer();
-            videoTimer.Interval = TimeSpan.FromSeconds(1/30);
-            videoTimer.Tick += RenderVideo;
-            videoTimer.Start();
-
+            _hud.SizeChanged += UpdateSize;
         }
 
         private void UpdateSize(object sender, SizeChangedEventArgs e)
@@ -85,43 +58,30 @@ namespace SkyEye.UI.Views
             _gimbalPositionDotTransform.X = centerX + _droneViewModel.HorisonalAxis;
         }
 
-
-
         private void OnNewFrameRecived(byte[] data)
         {
-
-            frame = data;
+            _frame = data;
         }
 
         private void RenderVideo(object? sender, EventArgs e)
         {
-
-            if (frame == null)
+            if (_frame == null)
                 return;
 
-            _mediaPlayer.Source = CreateBitmapFromRawData(frame, 1280, 720, 3);
-
+            _mediaPlayer.Source = CreateBitmapFromRawData(_frame, 1280, 720, 3);
         }
-
-
 
         private BitmapSource CreateBitmapFromRawData(byte[] pixelData, int width, int height, int bytesPerPixel)
         {
-            // Oblicz długość jednego wiersza (stride)
             int stride = width * bytesPerPixel;
 
-            // Utwórz Bitmapę
-            var bitmap = BitmapSource.Create(
-                width,                          // Szerokość obrazu
-                height,                         // Wysokość obrazu
-                96,                             // DPI w poziomie
-                96,                             // DPI w pionie
-                bytesPerPixel == 3              // Format piksela (RGB lub RGBA)
+            var bitmap = BitmapSource.Create(width, height, 96, 96, 
+                bytesPerPixel == 3
                     ? System.Windows.Media.PixelFormats.Rgb24
                     : System.Windows.Media.PixelFormats.Bgra32,
-                null,                           // Paleta (null dla obrazu TrueColor)
-                pixelData,                      // Tablica bajtów z surowymi danymi
-                stride                          // Długość jednego wiersza w bajtach
+                null,
+                pixelData,
+                stride
             );
 
             return bitmap;

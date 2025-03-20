@@ -3,13 +3,10 @@ using SkyEye.Connector.CommandService;
 using SkyEye.Connector.Datalink;
 using SkyEye.UI.ViewModels;
 using SkyEye.UI.Views;
-using System.Timers;
-using System.Configuration;
-using System.Data;
 using System.Windows;
-using Timer = System.Timers.Timer;
 using SkyEye.UI.Commands;
 using System.Windows.Threading;
+using SkyEye.Connector;
 
 namespace SkyEye.UI
 {
@@ -61,9 +58,13 @@ namespace SkyEye.UI
 
             serviceCollection.AddSingleton<IncreesAngleControlCommand>();
             serviceCollection.AddSingleton<ChangeModeCommand>();
+            serviceCollection.AddSingleton<ChangeZoomCommand>();
             serviceCollection.AddSingleton<DroneView>();
             serviceCollection.AddSingleton<DroneViewModel>();
+            serviceCollection.AddSingleton<IVideoReceiver, VideoReceiver>();
             serviceCollection.AddSingleton<MainWindow>();
+
+            IVideoReceiver videoReciver = new VideoReceiver();
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
         }

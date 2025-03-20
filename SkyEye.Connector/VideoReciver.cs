@@ -41,10 +41,6 @@ namespace SkyEye.Connector
                     {
                         buffer.Map(out MapInfo mapInfo, MapFlags.Read);
 
-                        int width = 1280;
-                        int height = 720;
-                        int channels = 3;
-
                         byte[] data = new byte[mapInfo.Data.Length];
                         byte[] image;
 
@@ -61,8 +57,6 @@ namespace SkyEye.Connector
                 });
             }
         }
-
-
 
         public void Play()
         {

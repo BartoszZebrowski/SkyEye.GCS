@@ -10,10 +10,12 @@ namespace SkyEye.UI.ViewModels
 {
     public class DroneViewModel : NotifyPropertyChanged
     {
-        //do wywalenia pewnie całosc
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         public BitmapImage VideoFrame { get; private set; }
         public IncreesAngleControlCommand IncreesAngleControlCommand { get; private set; }
         public ChangeModeCommand ChangeModeCommand { get; private set; }
+        public ChangeZoomCommand ChangeZoomCommand { get; private set; }
 
         private int _horisonalAxis;
         public int HorisonalAxis 
@@ -23,23 +25,31 @@ namespace SkyEye.UI.ViewModels
         }
 
         private int _verticalAxis;
-        public int VerticalAxis {
+        public int VerticalAxis 
+        {
             get => _verticalAxis;
-            private set 
-            {
-                _verticalAxis = value;
-                OnPropertyChanged(nameof(VerticalAxis));
-            }
+            private set => SetField(ref _verticalAxis, value);
+        }
+
+        private float _zoomValue;
+        public float ZoomValue
+        {
+            get => _zoomValue;
+            private set => SetField(ref _zoomValue, value);
         }
 
         private Datalink _datalink;
 
-        public DroneViewModel(Datalink datalink, IncreesAngleControlCommand increesAngleControlCommand, ChangeModeCommand changeModeCommand)
+        public DroneViewModel(Datalink datalink, 
+            IncreesAngleControlCommand increesAngleControlCommand, 
+            ChangeModeCommand changeModeCommand,
+            ChangeZoomCommand changeZoomCommand)
         {
             _datalink = datalink;
 
             IncreesAngleControlCommand = increesAngleControlCommand;
             ChangeModeCommand = changeModeCommand;
+            ChangeZoomCommand = changeZoomCommand;
 
             _datalink.GetRemoteValue<int>(RemoteValueType.TargetVerticalAngle).ValueChanged 
                 += value => VerticalAxis = value;
@@ -47,9 +57,10 @@ namespace SkyEye.UI.ViewModels
             _datalink.GetRemoteValue<int>(RemoteValueType.TargetHorizontalAngle).ValueChanged
                 += value => HorisonalAxis = value;
 
+            _datalink.GetRemoteValue<float>(RemoteValueType.ZoomValue).ValueChanged
+                += value => ZoomValue = value;
+
             OnPropertyChanged();
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

@@ -76,15 +76,11 @@ namespace SkyEye.Connector.CommandService
             }
             else if (remoteValue is RemoteValue<float> floatRemoteValue)
             {
-                message = $"{(int)remoteValue.RemoteValueType};1;{floatRemoteValue.GetValueToUpdate().ToString()}";
+                message = $"{(int)remoteValue.RemoteValueType};1;{Math.Round(floatRemoteValue.GetValueToUpdate(),2).ToString().Replace(",", ".")}";
             }
             else if (remoteValue is RemoteValue<string> stringRemoteValue)
             {
                 message = $"{(int)remoteValue.RemoteValueType};1;{stringRemoteValue.GetValueToUpdate().ToString()}";
-            }
-            else if (remoteValue is RemoteValue<object> enumRemoteValue)
-            {
-                message = $"{(int)remoteValue.RemoteValueType};1;{(int)enumRemoteValue.GetValueToUpdate()}";
             }
 
             return message;
@@ -111,13 +107,21 @@ namespace SkyEye.Connector.CommandService
 
         private void UpdateValue(IRemoteValue remoteValue, string value) 
         {
+
             if (remoteValue is RemoteValue<int> intRemoteValue)
             {
+                int commaIndex = value.IndexOf('.');
+
+                if (commaIndex >= 0)
+                {
+                    value = value.Substring(0, commaIndex);
+                }
+
                 intRemoteValue.UpdateValue(int.Parse(value));
             }
             else if (remoteValue is RemoteValue<float> floatRemoteValue)
             {
-                floatRemoteValue.UpdateValue(float.Parse(value));
+                floatRemoteValue.UpdateValue(float.Parse(value.Replace(".", ",")));
             }
             else if (remoteValue is RemoteValue<string> stringRemoteValue)
             {

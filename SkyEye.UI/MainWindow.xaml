@@ -8,6 +8,6 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="720" Width="1280">
     
-    <Frame Name="MainFrame" />
+    <Frame Name="MainFrame" Background="Black" />
 
 </Window>

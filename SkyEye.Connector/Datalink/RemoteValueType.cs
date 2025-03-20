@@ -13,5 +13,6 @@ namespace SkyEye.Connector.MessagesService
         TargetVerticalAngle,
         ActualHorizontaAngle,
         ActualVerticalAngle,
+        ZoomValue,
     }
 }
