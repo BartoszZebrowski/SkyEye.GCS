@@ -11,15 +11,17 @@ namespace SkyEye.UI.Commands
 {
     public class IncreesAngleControlCommand : ICommand
     {
+        private static float _step = 0.1f;
+
         public event EventHandler? CanExecuteChanged;
 
-        private RemoteValue<int> _horisonalAxisRemoteValue;
-        private RemoteValue<int> _verticalAxisRemoteValue;
+        private RemoteValue<float> _horisonalAxisRemoteValue;
+        private RemoteValue<float> _verticalAxisRemoteValue;
 
         public IncreesAngleControlCommand(Datalink datalink)
         {
-            _horisonalAxisRemoteValue = datalink.GetRemoteValue<int>(RemoteValueType.TargetHorizontalAngle);
-            _verticalAxisRemoteValue = datalink.GetRemoteValue<int>(RemoteValueType.TargetVerticalAngle);
+            _horisonalAxisRemoteValue = datalink.GetRemoteValue<float>(RemoteValueType.TargetHorizontalAngle);
+            _verticalAxisRemoteValue = datalink.GetRemoteValue<float>(RemoteValueType.TargetVerticalAngle);
         }
 
         public bool CanExecute(object? parameter)
@@ -31,19 +33,19 @@ namespace SkyEye.UI.Commands
             {
                 case "Up":
                     var angle1 = _verticalAxisRemoteValue.Value;
-                     _verticalAxisRemoteValue.Value = angle1 + 1;
+                     _verticalAxisRemoteValue.Value = angle1 + _step;
                     break;
                 case "Down":
                     var angle2 = _verticalAxisRemoteValue.Value;
-                     _verticalAxisRemoteValue.Value = angle2 - 1;
+                     _verticalAxisRemoteValue.Value = angle2 - _step;
                     break;
                 case "Right":
                     var angle3 = _horisonalAxisRemoteValue.Value;
-                     _horisonalAxisRemoteValue.Value = angle3 + 1; 
+                     _horisonalAxisRemoteValue.Value = angle3 + _step; 
                     break;
                 case "Left":
                     var angle4 = _horisonalAxisRemoteValue.Value;
-                    _horisonalAxisRemoteValue.Value = angle4 - 1;
+                    _horisonalAxisRemoteValue.Value = angle4 - _step;
                     break;
             }
         }

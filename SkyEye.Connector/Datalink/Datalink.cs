@@ -25,11 +25,12 @@ namespace SkyEye.Connector.Datalink
 
         private void CreateRemoteValues()
         {
+            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.Ping, RemoteValueMode.ReadAndWrite));
             RemoteValues.Add(new RemoteValue<int>(RemoteValueType.WorkingMode, RemoteValueMode.ReadAndWrite));
-            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.TargetHorizontalAngle, RemoteValueMode.ReadAndWrite));
-            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.TargetVerticalAngle, RemoteValueMode.ReadAndWrite));
-            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.ActualHorizontaAngle, RemoteValueMode.ReadOnly));
-            RemoteValues.Add(new RemoteValue<int>(RemoteValueType.ActualVerticalAngle, RemoteValueMode.ReadOnly));
+            RemoteValues.Add(new RemoteValue<float>(RemoteValueType.TargetHorizontalAngle, RemoteValueMode.ReadAndWrite));
+            RemoteValues.Add(new RemoteValue<float>(RemoteValueType.TargetVerticalAngle, RemoteValueMode.ReadAndWrite));
+            RemoteValues.Add(new RemoteValue<float>(RemoteValueType.ActualHorizontaAngle, RemoteValueMode.ReadOnly));
+            RemoteValues.Add(new RemoteValue<float>(RemoteValueType.ActualVerticalAngle, RemoteValueMode.ReadOnly));
             RemoteValues.Add(new RemoteValue<float>(RemoteValueType.ZoomValue, RemoteValueMode.ReadOnly));
         }
     }

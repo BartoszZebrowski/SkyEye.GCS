@@ -18,7 +18,7 @@ namespace SkyEye.UI.Commands
 
         public ChangeModeCommand(Datalink datalink)
         {
-            _workingModeRemoteValue = datalink.GetRemoteValue<int>((int)RemoteValueType.WorkingMode);
+            _workingModeRemoteValue = datalink.GetRemoteValue<int>(RemoteValueType.WorkingMode);
         }
 
         public bool CanExecute(object? parameter)

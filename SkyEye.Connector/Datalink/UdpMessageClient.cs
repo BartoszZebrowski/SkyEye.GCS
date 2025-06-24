@@ -13,7 +13,7 @@ namespace SkyEye.Connector.CommandService
     {
         private UdpClient? _client;
         private Datalink.Datalink _datalink;
-        private IPEndPoint _remoteEP = new IPEndPoint(IPAddress.Any, 0);
+        private IPEndPoint _remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
         private ConcurrentQueue<string> _remoteVariableToSetQueue = new();
 
         public UdpMessageClient(string ip, int port, Datalink.Datalink datalink) 
@@ -60,7 +60,7 @@ namespace SkyEye.Connector.CommandService
         {
             while (true)
             {
-                var recivedMessage = _client.Receive(ref _remoteEP);
+                var recivedMessage = _client.Receive(ref _remoteEndPoint);
                 var message = Encoding.UTF8.GetString(recivedMessage);
                 DeserializeRemoteValue(message);
             }

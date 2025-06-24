@@ -8,7 +8,8 @@ namespace SkyEye.Connector.MessagesService
 {
     public enum RemoteValueType
     {
-        WorkingMode = 0,
+        Ping = 0,
+        WorkingMode,
         TargetHorizontalAngle,
         TargetVerticalAngle,
         ActualHorizontaAngle,

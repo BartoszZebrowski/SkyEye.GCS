@@ -17,15 +17,15 @@ namespace SkyEye.UI.ViewModels
         public ChangeModeCommand ChangeModeCommand { get; private set; }
         public ChangeZoomCommand ChangeZoomCommand { get; private set; }
 
-        private int _horisonalAxis;
-        public int HorisonalAxis 
+        private float _horisonalAxis;
+        public float HorisonalAxis 
         {
             get => _horisonalAxis;
             private set => SetField(ref _horisonalAxis, value); 
         }
 
-        private int _verticalAxis;
-        public int VerticalAxis 
+        private float _verticalAxis;
+        public float VerticalAxis 
         {
             get => _verticalAxis;
             private set => SetField(ref _verticalAxis, value);
@@ -51,10 +51,10 @@ namespace SkyEye.UI.ViewModels
             ChangeModeCommand = changeModeCommand;
             ChangeZoomCommand = changeZoomCommand;
 
-            _datalink.GetRemoteValue<int>(RemoteValueType.TargetVerticalAngle).ValueChanged 
+            _datalink.GetRemoteValue<float>(RemoteValueType.TargetVerticalAngle).ValueChanged 
                 += value => VerticalAxis = value;
 
-            _datalink.GetRemoteValue<int>(RemoteValueType.TargetHorizontalAngle).ValueChanged
+            _datalink.GetRemoteValue<float>(RemoteValueType.TargetHorizontalAngle).ValueChanged
                 += value => HorisonalAxis = value;
 
             _datalink.GetRemoteValue<float>(RemoteValueType.ZoomValue).ValueChanged
