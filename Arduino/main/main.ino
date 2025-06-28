@@ -3,129 +3,47 @@
 #include <math.h>
 #include <quaternion_type.h>
 
+#define DEG2RAD(x)  ((x)*PI/180.0f)
 
 
-class Quaternion {
-public:
-    float w, x, y, z;   // składowe (skalarny + wektor)
-
-    /* --- Konstruktory --------------------------------------------------- */
-    Quaternion(float w = 1.0f, float x = 0.0f, float y = 0.0f, float z = 0.0f)
-        : w(w), x(x), y(y), z(z) {}
-
-    /* --- Operatory arytmetyczne ---------------------------------------- */
-    inline Quaternion operator+(const Quaternion& q) const {
-        return Quaternion(w + q.w, x + q.x, y + q.y, z + q.z);
-    }
-
-    inline Quaternion operator-(const Quaternion& q) const {
-        return Quaternion(w - q.w, x - q.x, y - q.y, z - q.z);
-    }
-
-    inline Quaternion operator*(float s) const {
-        return Quaternion(w * s, x * s, y * s, z * s);
-    }
-
-    inline Quaternion operator/(float s) const {
-        return Quaternion(w / s, x / s, y / s, z / s);
-    }
-
-    // Iloczyn Hamiltona – łączenie obrotów
-    inline Quaternion operator*(const Quaternion& q) const {
-        return Quaternion(
-            w * q.w - x * q.x - y * q.y - z * q.z,
-            w * q.x + x * q.w + y * q.z - z * q.y,
-            w * q.y - x * q.z + y * q.w + z * q.x,
-            w * q.z + x * q.y - y * q.x + z * q.w
-        );
-    }
-
-    /* --- Właściwości ---------------------------------------------------- */
-    inline float magnitude() const {
-        return sqrtf(w * w + x * x + y * y + z * z);
-    }
-
-    inline void normalize() {
-        float m = magnitude();
-        if (m == 0) return;
-        w /= m; x /= m; y /= m; z /= m;
-    }
-
-    inline Quaternion conjugate() const {
-        return Quaternion(w, -x, -y, -z);
-    }
-
-    inline Quaternion inverse() const {
-        float m2 = w * w + x * x + y * y + z * z;
-        if (m2 == 0) return Quaternion();
-        return conjugate() / m2;
-    }
-
-    /* --- Konwersje ------------------------------------------------------ */
-    // Z kątów Eulera (roll, pitch, yaw) na kwaternion
-    static inline Quaternion fromEuler(float roll, float pitch, float yaw, bool degrees = true) {
-        if (degrees) {
-            const float d2r = PI / 180.0f;
-            roll  *= d2r;
-            pitch *= d2r;
-            yaw   *= d2r;
-        }
-
-        const float cy = cosf(yaw * 0.5f);
-        const float sy = sinf(yaw * 0.5f);
-        const float cp = cosf(pitch * 0.5f);
-        const float sp = sinf(pitch * 0.5f);
-        const float cr = cosf(roll * 0.5f);
-        const float sr = sinf(roll * 0.5f);
-
-        return Quaternion(
-            cr * cp * cy + sr * sp * sy,
-            sr * cp * cy - cr * sp * sy,
-            cr * sp * cy + sr * cp * sy,
-            cr * cp * sy - sr * sp * cy
-        );
-    }
-
-    // Z kwaternionu na kąty Eulera (roll, pitch, yaw)
-    inline void toEuler(float& roll, float& pitch, float& yaw, bool degrees = true) const {
-        /* ROLL  */
-        const float sinr_cosp = 2.0f * (w * x + y * z);
-        const float cosr_cosp = 1.0f - 2.0f * (x * x + y * y);
-        roll = atan2f(sinr_cosp, cosr_cosp);
-
-        /* PITCH */
-        const float sinp = 2.0f * (w * y - z * x);
-        if (fabsf(sinp) >= 1.0f)
-            pitch = copysignf(PI / 2.0f, sinp);     // gimbal‑lock
-        else
-            pitch = asinf(sinp);
-
-        /* YAW   */
-        const float siny_cosp = 2.0f * (w * z + x * y);
-        const float cosy_cosp = 1.0f - 2.0f * (y * y + z * z);
-        yaw = atan2f(siny_cosp, cosy_cosp);
-
-        if (degrees) {
-            const float r2d = 180.0f / PI;
-            roll  *= r2d;
-            pitch *= r2d;
-            yaw   *= r2d;
-        }
-    }
-
-    /* --- Dodatki -------------------------------------------------------- */
-    // Obrót wektora 3‑D (x, y, z) w miejscu
-    inline void rotateVector(float& vx, float& vy, float& vz) const {
-        Quaternion v(0.0f, vx, vy, vz);
-        Quaternion res = (*this) * v * this->inverse();
-        vx = res.x; vy = res.y; vz = res.z;
-    }
+struct Quaternion {
+  float w,x,y,z;
+  
+  constexpr Quaternion(float _w=1,float _x=0,float _y=0,float _z=0)
+    :w(_w),x(_x),y(_y),z(_z){}
+  
+  inline void norm()
+  {
+     float n=sqrtf(w*w+x*x+y*y+z*z); 
+     if(n){w/=n;x/=n;y/=n;z/=n;} 
+  }
+  
+  inline Quaternion operator*(const Quaternion& q) const {
+    return { w*q.w - x*q.x - y*q.y - z*q.z,
+             w*q.x + x*q.w + y*q.z - z*q.y,
+             w*q.y - x*q.z + y*q.w + z*q.x,
+             w*q.z + x*q.y - y*q.x + z*q.w }; 
+  }
+  
+  static Quaternion fromEulerDeg(float rD,float pD,float yD){
+    const float r=DEG2RAD(rD)*0.5f, p=DEG2RAD(pD)*0.5f, y=DEG2RAD(yD)*0.5f;
+    const float cr=cosf(r), sr=sinf(r), cp=cosf(p), sp=sinf(p), cy=cosf(y), sy=sinf(y);
+    return { cr*cp*cy + sr*sp*sy,  sr*cp*cy - cr*sp*sy,
+             cr*sp*cy + sr*cp*sy,  cr*cp*sy - sr*sp*cy };
+  }
+  
+  void toEuler(float& roll,float& pitch,float& yaw) const {
+    roll  = atan2f(2*(w*x+y*z), 1-2*(x*x+y*y));
+    const float s = 2*(w*y - z*x);
+    pitch = fabsf(s)>=1 ? copysignf(PI/2,s) : asinf(s);
+    yaw   = atan2f(2*(w*z+x*y), 1-2*(y*y+z*z));
+  }
 };
+
+static Quaternion imuQ;
 
 
 #define DEBUG 1
-
-
 
 #define IMU_ENCODER_PITCH_OFFSET 2.69
 
@@ -200,12 +118,12 @@ void doTarget(char* cmd) { command.scalar(&verticalTargetAngle, cmd); }
 void doMotor(char* cmd) { command.motor(&verticalMotor, cmd); } 
 
 void setup() {
+  Wire.setClock(400000);
   Serial.begin(115200);
   //SimpleFOCDebug::enable(&Serial);
 
   configureIMU();
   configureVerticalMotor();
-  //configureHorizontalMotor();
 
   command.add('T', doTarget, "target angle");
   command.add('M',doMotor,'motor');
@@ -225,10 +143,11 @@ void loop() {
   loopIMU();
 
   verticalMotor.loopFOC();
-  verticalMotor.move(-targetEncoderAngle);
+  verticalMotor.move(-verticalError * 10);
 
 
   debugValue("velocity", verticalMotorSensor.getVelocity());  
+  debugValue("verticalError", -verticalError);  
   // debugValue("angle", verticalMotorSensor.getAngle());
   
   // horizontalMotor.loopFOC();
@@ -282,7 +201,6 @@ void configureVerticalMotor(){
   //sensor
   verticalMotorSensor.init();
   verticalMotor.linkSensor(&verticalMotorSensor);
-  verticalMotor.sensor_direction = Direction::CCW;
   //driver
   verticalMotorDriver.voltage_power_supply = 20;
   verticalMotorDriver.init();
@@ -293,12 +211,12 @@ void configureVerticalMotor(){
   verticalMotor.controller = MotionControlType::velocity;
 
   // bardzo dobre nastawy
-  verticalMotor.PID_velocity.P = 1.3;
+  verticalMotor.PID_velocity.P = 2;
   verticalMotor.PID_velocity.I = 1;
   verticalMotor.PID_velocity.D = 0.01;
   verticalMotor.PID_velocity.output_ramp = 1000;
   verticalMotor.voltage_limit = 20;
-  verticalMotor.LPF_velocity.Tf = 0.001f;
+  verticalMotor.LPF_velocity.Tf = 0.002f;
   verticalMotor.P_angle.P = 2;
   verticalMotor.velocity_limit = 100;
   verticalMotor.useMonitoring(Serial);
@@ -359,10 +277,11 @@ void loopIMU(){
 
   switch (sensorValue.sensorId) {
     case SH2_GAME_ROTATION_VECTOR: 
-        i = sensorValue.un.gameRotationVector.i;
-        j = sensorValue.un.gameRotationVector.j;
-        k = sensorValue.un.gameRotationVector.k;
-        real = sensorValue.un.gameRotationVector.real;
+        imuQ.w = sensorValue.un.gameRotationVector.real;
+        imuQ.x = sensorValue.un.gameRotationVector.i;
+        imuQ.y = sensorValue.un.gameRotationVector.j;
+        imuQ.z = sensorValue.un.gameRotationVector.k;
+        imuQ.norm();
       break;
       // case SH2_ACCELEROMETER:
       //   ax = sensorValue.un.accelerometer.x;
@@ -402,6 +321,8 @@ void setReportsIMU()
   if (!bno085.enableReport(SH2_MAGNETIC_FIELD_UNCALIBRATED)) {
     print("Could not enable SH2_MAGNETIC_FIELD_UNCALIBRATED");
   }
+
+  bno085.enableReport(SH2_GAME_ROTATION_VECTOR, 2000);
 }
 
 void doStabilization(){
@@ -446,25 +367,22 @@ void complementaryFilter(){
 
 void createQuaternions() {
 
-  Quaternion imuQ(real, i, j, k);
-  imuQ.normalize(); 
-  
-  Quaternion rot90 = Quaternion::fromEuler(0.0f, 90.0f, 0.0f, true);
-  Quaternion roteatedImu = rot90 * imuQ;
+  static const Quaternion rot90 = Quaternion::fromEulerDeg(0,90,0);
+  Quaternion rotated = rot90 * imuQ; rotated.norm();
 
-  float imuRoll, imuPitch, imuYaw;
-  roteatedImu.toEuler(imuRoll, imuPitch, imuYaw, false);
-  targetEncoderAngle = imuPitch + verticalTargetAngle;
+  float r,p,y; 
+  rotated.toEuler(r,p,y);
+  verticalError = p + verticalTargetAngle;
 
-  debugValue("verticalTargetAngle", verticalTargetAngle);
-  debugValue("verticalMotorSensor", verticalMotorSensor.getSensorAngle());
-  debugValue("imuPitch", imuPitch);
-  debugValue("targetEncoderAngle", targetEncoderAngle);
+  // debugValue("verticalTargetAngle", verticalTargetAngle);
+  // debugValue("verticalMotorSensor", verticalMotorSensor.getSensorAngle());
+  // debugValue("imuPitch", imuPitch);
+  // debugValue("targetEncoderAngle", targetEncoderAngle);
 
-  debugValue("w", roteatedImu.w);
-  debugValue("x", roteatedImu.x);
-  debugValue("y", roteatedImu.y);
-  debugValue("z", roteatedImu.z);
+  debugValue("p", p);
+  // debugValue("x", roteatedImu.x);
+  // debugValue("y", roteatedImu.y);
+  // debugValue("z", roteatedImu.z);
 }
 
 void doCommunication(){
