@@ -11,7 +11,7 @@ namespace SkyEye.UI.Commands
 {
     public class IncreesAngleControlCommand : ICommand
     {
-        private static float _step = 1.0f;
+        private static float _step = 0.1f;
 
         public event EventHandler? CanExecuteChanged;
 
@@ -33,19 +33,19 @@ namespace SkyEye.UI.Commands
             {
                 case "Up":
                     var angle1 = _verticalAxisRemoteValue.Value;
-                     _verticalAxisRemoteValue.Value = (float)((angle1 + _step) / Math.PI);
+                    _verticalAxisRemoteValue.Value = angle1 + _step;
                     break;
                 case "Down":
                     var angle2 = _verticalAxisRemoteValue.Value;
-                     _verticalAxisRemoteValue.Value = (float)((angle2 - _step) / Math.PI);
+                     _verticalAxisRemoteValue.Value = angle2 - _step;
                     break;
                 case "Right":
                     var angle3 = _horisonalAxisRemoteValue.Value;
-                     _horisonalAxisRemoteValue.Value = (float)((angle3 + _step) / Math.PI); 
+                    _horisonalAxisRemoteValue.Value = angle3 + _step;
                     break;
                 case "Left":
                     var angle4 = _horisonalAxisRemoteValue.Value;
-                    _horisonalAxisRemoteValue.Value = (float)((angle4 - _step) / Math.PI);
+                    _horisonalAxisRemoteValue.Value = angle4 - _step;
                     break;
             }
         }

@@ -43,7 +43,7 @@ struct Quaternion {
 static Quaternion imuQ;
 
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define IMU_ENCODER_PITCH_OFFSET 2.69
 
