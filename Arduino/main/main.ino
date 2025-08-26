@@ -5,6 +5,7 @@
 #include <PID_v1.h>
 
 #define DEG2RAD(x)  ((x)*PI/180.0f)
+#define DEBUG 1
 
 struct Quaternion {
   float w,x,y,z;
@@ -40,10 +41,6 @@ struct Quaternion {
   }
 };
 
-
-
-
-
 void configureVerticalMotor();
 void configureHorizontalMotor();
 
@@ -57,10 +54,6 @@ int splitCommand(String input, String parts[], char delimiter = ';');
 void print(String message);
 void debugValue(String name, float value);
 
-static Quaternion imuQ;
-
-#define DEBUG 1
-
 enum RemoteVariableType{
   Ping = 0,
   WorkingMode,
@@ -70,6 +63,8 @@ enum RemoteVariableType{
   ActualVerticalAngle,
   ZoomValue,
 };
+
+static Quaternion imuQ;
 
 const unsigned long interval = 1000;
 unsigned long lastRequestTime = 0;
@@ -121,7 +116,6 @@ void setup() {
   _delay(1000);
   startTime = micros();
 }
-
 
 void loop() {
   if(!DEBUG)
