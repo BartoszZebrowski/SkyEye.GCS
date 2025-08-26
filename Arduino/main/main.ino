@@ -2,9 +2,9 @@
 #include <Adafruit_BNO08x.h>
 #include <math.h>
 #include <quaternion_type.h>
+#include <PID_v1.h>
 
 #define DEG2RAD(x)  ((x)*PI/180.0f)
-
 
 struct Quaternion {
   float w,x,y,z;
@@ -40,30 +40,12 @@ struct Quaternion {
   }
 };
 
-static Quaternion imuQ;
 
 
-#define DEBUG 0
-
-#define IMU_ENCODER_PITCH_OFFSET 2.69
-
-enum RemoteVariableType{
-  Ping = 0,
-  WorkingMode,
-  TargetHorizontalAngle,
-  TargetVerticalAngle,
-  ActualHorizontaAngle,
-  ActualVerticalAngle,
-  ZoomValue,
-};
-//komunikacja
-const unsigned long interval = 1000;
-unsigned long lastRequestTime = 0;
-int currentVariable = 0;
 
 
 void configureVerticalMotor();
-//void configureHorizontalMotor();
+void configureHorizontalMotor();
 
 void loopIMU();
 void setReportsIMU();
@@ -75,39 +57,47 @@ int splitCommand(String input, String parts[], char delimiter = ';');
 void print(String message);
 void debugValue(String name, float value);
 
+static Quaternion imuQ;
+
+#define DEBUG 1
+
+enum RemoteVariableType{
+  Ping = 0,
+  WorkingMode,
+  TargetHorizontalAngle,
+  TargetVerticalAngle,
+  ActualHorizontaAngle,
+  ActualVerticalAngle,
+  ZoomValue,
+};
+
+const unsigned long interval = 1000;
+unsigned long lastRequestTime = 0;
+int currentVariable = 0;
+
 Adafruit_BNO08x bno085(-1);
 sh2_SensorValue_t sensorValue;
-
-float ax, ay, az;
-float aPitch, aRoll;
-
-float gx, gy, gz;
-float gRoll, gPitch, gYaw;
-
-float mx, my, mz;
-float mYaw;
-
-float alpha = 0.85;
-
-float i, k, j, real;
-
 unsigned long startTime;
 
-float pitch, roll, yaw;
-
-float dt;
-float previousTime;
-
-float targetEncoderAngle;
+MagneticSensorI2CConfig_s AS5600_I2C_2 = {
+  .chip_address = 0x66,
+  .bit_resolution = 12,
+  .angle_register = 0x0C,
+  .msb_mask = 0x0F,
+  .msb_shift = 8,
+  .lsb_mask = 0xFF,
+  .lsb_shift = 0
+};
 
 MagneticSensorI2C verticalMotorSensor = MagneticSensorI2C(AS5600_I2C);
 BLDCMotor verticalMotor = BLDCMotor(7);
 BLDCDriver3PWM verticalMotorDriver = BLDCDriver3PWM(6, 5, 4, 3);
 float verticalError = 0;
 
-// MagneticSensorI2C horizontalMotorSensor = MagneticSensorI2C(AS5600_I2C);
-// BLDCMotor horizontalMotor = BLDCMotor(7);
-// BLDCDriver3PWM horizontalMotorDriver = BLDCDriver3PWM(6, 5, 4, 3);
+MagneticSensorI2C horizontalMotorSensor = MagneticSensorI2C(AS5600_I2C_2);
+BLDCMotor horizontalMotor = BLDCMotor(7);
+BLDCDriver3PWM horizontalMotorDriver = BLDCDriver3PWM(10, 9, 8, 7);
+float horizontalError = 0;
 
 float verticalTargetAngle = 0;
 float horizontalTargetAngle = 0;
@@ -120,13 +110,13 @@ void doMotor(char* cmd) { command.motor(&verticalMotor, cmd); }
 void setup() {
   Wire.setClock(400000);
   Serial.begin(115200);
-  //SimpleFOCDebug::enable(&Serial);
 
   configureIMU();
   configureVerticalMotor();
+  configureHorizontalMotor();
 
   command.add('T', doTarget, "target angle");
-  command.add('M',doMotor,'motor');
+  command.add('M', doMotor, 'motor');
 
   _delay(1000);
   startTime = micros();
@@ -142,116 +132,71 @@ void loop() {
   doStabilization();
   loopIMU();
 
-  verticalMotor.loopFOC();
-  verticalMotor.move(-verticalError * 10);
-
-
-  debugValue("velocity", verticalMotorSensor.getVelocity());  
-  debugValue("verticalError", -verticalError);  
-  // debugValue("angle", verticalMotorSensor.getAngle());
-  
-  // horizontalMotor.loopFOC();
-  // horizontalMotor.move();
-
-  debugValue("encoder", verticalMotorSensor.getSensorAngle());
-  // debugValue("ax", ax);
-  // debugValue("ay", ay);
-  // debugValue("az", az);
-  // debugValue("gx", gx);
-  // debugValue("gy", gy);
-  // debugValue("gz", gz);
-  // debugValue("mx", mx);
-  // debugValue("my", my);
-  // debugValue("mz", mz);
-  // debugValue("roll", roll);
-  // debugValue("pitch", pitch);
-  // debugValue("yaw", yaw);  
-  
-  // debugValue("aRoll", aRoll);
-  // debugValue("aPitch", aPitch);
-  // debugValue("mYaw", mYaw);
-  // debugValue("gRoll", gRoll);
-  // debugValue("gPitch", gPitch);
-  // debugValue("gYaw", gYaw);
-
-
-  // Serial.print(micros()- startTime);
-  // Serial.print(";");
-  // Serial.print(verticalMotorSensor.getSensorAngle()); Serial.print(";");
-  // Serial.print(ax); Serial.print(";");
-  // Serial.print(ay); Serial.print(";");
-  // Serial.print(az); Serial.print(";");
-  // Serial.print(gx); Serial.print(";");
-  // Serial.print(gy); Serial.print(";");
-  // Serial.print(gz); Serial.print(";");
-  // Serial.print(mx); Serial.print(";");
-  // Serial.print(my); Serial.print(";");  
-  // Serial.print(mz); Serial.print(";");
-  // Serial.print(i); Serial.print(";");
-  // Serial.print(k); Serial.print(";");
-  // Serial.print(j); Serial.print(";");
-  // Serial.println(real);
-  // delay(25);
-
   command.run();
-
 }
 
 void configureVerticalMotor(){
-  //sensor
   verticalMotorSensor.init();
   verticalMotor.linkSensor(&verticalMotorSensor);
-  //driver
   verticalMotorDriver.voltage_power_supply = 20;
+
   verticalMotorDriver.init();
   verticalMotor.linkDriver(&verticalMotorDriver);
 
-  //motor
   verticalMotor.foc_modulation = FOCModulationType::SpaceVectorPWM;
-  verticalMotor.controller = MotionControlType::velocity;
+  verticalMotor.controller = MotionControlType::angle;
 
-  // bardzo dobre nastawy
-  verticalMotor.PID_velocity.P = 2;
+  verticalMotor.PID_velocity.P = 2.3;
   verticalMotor.PID_velocity.I = 1;
   verticalMotor.PID_velocity.D = 0.01;
   verticalMotor.PID_velocity.output_ramp = 1000;
-  verticalMotor.voltage_limit = 20;
+  verticalMotor.voltage_limit = 12;
   verticalMotor.LPF_velocity.Tf = 0.002f;
-  verticalMotor.P_angle.P = 2;
+  verticalMotor.P_angle.P = 1.0;
+  verticalMotor.P_angle.I = 1;
+  verticalMotor.P_angle.D = 0.01;
+  verticalMotor.P_angle.output_ramp = 1000;
+  verticalMotor.LPF_angle.Tf = 0;
   verticalMotor.velocity_limit = 100;
   verticalMotor.useMonitoring(Serial);
+  verticalMotor.pole_pairs = 7;
   verticalMotor.init();
   verticalMotor.initFOC();
 
   print(F("Vertical motor ready."));
 }
 
-// void configureHorizontalMotor(){
-//   //sensor
-//   horizontalMotorSensor.init();
-//   horizontalMotor.linkSensor(&verticalMotorSensor);
+void configureHorizontalMotor(){
+  horizontalMotorSensor.init();
+  horizontalMotor.linkSensor(&horizontalMotorSensor);
 
-//   //driver
-//   horizontalMotorDriver.voltage_power_supply = 12;
-//   horizontalMotorDriver.init();
-//   horizontalMotor.linkDriver(&verticalMotorDriver);
+  horizontalMotorDriver.voltage_power_supply = 20;
+  horizontalMotorDriver.init();
+  horizontalMotor.linkDriver(&horizontalMotorDriver);
 
-//   //motor
-//   horizontalMotor.foc_modulation = FOCModulationType::SpaceVectorPWM;
-//   horizontalMotor.controller = MotionControlType::angle;
-//   horizontalMotor.PID_velocity.P = 0.2f;
-//   horizontalMotor.PID_velocity.I = 20;
-//   horizontalMotor.PID_velocity.D = 0;
-//   horizontalMotor.voltage_limit = 6;
-//   horizontalMotor.LPF_velocity.Tf = 0.01f;
-//   horizontalMotor.P_angle.P = 20;
-//   horizontalMotor.velocity_limit = 20;
-//   horizontalMotor.useMonitoring(Serial);
-//   horizontalMotor.init();
-//   horizontalMotor.initFOC();
+  horizontalMotor.foc_modulation = FOCModulationType::SpaceVectorPWM;
+  horizontalMotor.controller = MotionControlType::angle;
 
-//   print(F("Horisontal motor ready."));
-// }
+  verticalMotor.PID_velocity.P = 2.6;
+  verticalMotor.PID_velocity.I = 1.8;
+  verticalMotor.PID_velocity.D = 0.01;
+  horizontalMotor.PID_velocity.output_ramp = 1000;
+  horizontalMotor.voltage_limit = 8;
+  horizontalMotor.voltage_sensor_align = 4;
+  horizontalMotor.LPF_velocity.Tf = 0.002f;
+  horizontalMotor.P_angle.P = 1;
+  horizontalMotor.P_angle.I = 1;
+  horizontalMotor.P_angle.D = 0.01;
+  horizontalMotor.P_angle.output_ramp = 1000;
+  horizontalMotor.LPF_angle.Tf = 0;
+  horizontalMotor.velocity_limit = 100;
+  horizontalMotor.useMonitoring(Serial);
+  horizontalMotor.init();
+  horizontalMotor.initFOC();
+  horizontalMotor.pole_pairs = 7;
+
+  print(F("Horizontal motor ready."));
+}
 
 void configureIMU(){
   if (!bno085.begin_I2C()) {
@@ -283,21 +228,6 @@ void loopIMU(){
         imuQ.z = sensorValue.un.gameRotationVector.k;
         imuQ.norm();
       break;
-      // case SH2_ACCELEROMETER:
-      //   ax = sensorValue.un.accelerometer.x;
-      //   ay = sensorValue.un.accelerometer.y;
-      //   az = sensorValue.un.accelerometer.z;
-      // break;    
-      // case SH2_GYROSCOPE_CALIBRATED:    
-      //   gx = sensorValue.un.gyroscope.x;
-      //   gy = sensorValue.un.gyroscope.y;
-      //   gz = sensorValue.un.gyroscope.z;
-      // break;
-      // case SH2_MAGNETIC_FIELD_CALIBRATED:    
-      //   mx = sensorValue.un.magneticField.x;
-      //   my = sensorValue.un.magneticField.y;
-      //   mz = sensorValue.un.magneticField.z;
-      // break;
   }
 }
 
@@ -306,83 +236,25 @@ void setReportsIMU()
   if (!bno085.enableReport(SH2_GAME_ROTATION_VECTOR)) {
     print("Could not enable SH2_GAME_ROTATION_VECTOR");
   }
-  if (!bno085.enableReport(SH2_ACCELEROMETER)) {
-    print("Could not enable SH2_ACCELEROMETER");
-  }
-  if (!bno085.enableReport(SH2_GYROSCOPE_CALIBRATED)) {
-    print("Could not enable SH2_GYROSCOPE_CALIBRATED");
-  }
-  if (!bno085.enableReport(SH2_GYROSCOPE_UNCALIBRATED)) {
-    print("Could not enable SH2_GYROSCOPE_UNCALIBRATED");
-  }
-  if (!bno085.enableReport(SH2_MAGNETIC_FIELD_CALIBRATED)) {
-    print("Could not enable SH2_MAGNETIC_FIELD_CALIBRATED");
-  }
-  if (!bno085.enableReport(SH2_MAGNETIC_FIELD_UNCALIBRATED)) {
-    print("Could not enable SH2_MAGNETIC_FIELD_UNCALIBRATED");
-  }
 
   bno085.enableReport(SH2_GAME_ROTATION_VECTOR, 2000);
 }
 
-void doStabilization(){
-  // calculateDt();
-  // calculateAcceleratorAngle();
-  // calculateMagnetometrAngle();
-  // calculateGyroscopeAngle();
-  // complementaryFilter();
-  createQuaternions();  
- 
-  
-}
-
-void calculateDt(){
-  unsigned long now = millis();
-  dt = (now - previousTime) / 1000.0;
-  previousTime = now;
-}
-
-void calculateAcceleratorAngle(){
-  aPitch = atan2(-ax, sqrt(ay * ay + az * az));
-  aRoll = atan2(ay, az);
-}
-
-void calculateMagnetometrAngle(){
-  float mxCorrection = (mx * sin(aRoll) * sin(aPitch)) + (my * cos(aRoll)) - (mz * sin(aRoll) * cos(aPitch));
-  float myCorrection = (mx * cos(aPitch)) + (mz * sin(aPitch));
-  mYaw = atan2(-myCorrection, mxCorrection);
-}
-
-void calculateGyroscopeAngle(){
-  gRoll = gRoll + gx * dt;
-  gPitch = gPitch + gy * dt;
-  gYaw = gYaw + gz * dt;
-}
-
-void complementaryFilter(){
-  roll = alpha * gRoll + (1- alpha) * aRoll;
-  pitch = alpha * gPitch + (1- alpha) * aPitch;
-  yaw = alpha * gYaw + (1- alpha) * mYaw;
-}
-
-void createQuaternions() {
-
+void doStabilization() {
   static const Quaternion rot90 = Quaternion::fromEulerDeg(0,90,0);
-  Quaternion rotated = rot90 * imuQ; rotated.norm();
+  Quaternion rotated = rot90 * imuQ;
 
-  float r,p,y; 
-  rotated.toEuler(r,p,y);
-  verticalError = p + verticalTargetAngle;
+  float roll, pitch, yaw;
+  rotated.toEuler(roll, pitch, yaw);
 
-  // debugValue("verticalTargetAngle", verticalTargetAngle);
-  // debugValue("verticalMotorSensor", verticalMotorSensor.getSensorAngle());
-  // debugValue("imuPitch", imuPitch);
-  // debugValue("targetEncoderAngle", targetEncoderAngle);
+  verticalError = -pitch;
+  horizontalError = yaw;
 
-  debugValue("p", p);
-  // debugValue("x", roteatedImu.x);
-  // debugValue("y", roteatedImu.y);
-  // debugValue("z", roteatedImu.z);
+  verticalMotor.move(verticalError - verticalMotorSensor.getSensorAngle());
+  horizontalMotor.move(horizontalError -horizontalMotorSensor.getSensorAngle());
+
+  verticalMotor.loopFOC();
+  horizontalMotor.loopFOC();
 }
 
 void doCommunication(){
@@ -416,10 +288,7 @@ void sendRequest(RemoteVariableType variable) {
 void handleCommand(String parts[], int count) {
   String command = parts[0];
 
-  if (command == "Ping") {
-    print("Pong");
-  } 
-  else if (command == "3" && count == 2) {
+  if (command == "3" && count == 2) {
     verticalTargetAngle = parts[1].toFloat();
     print("Ok");
   }  
@@ -462,16 +331,4 @@ void debugValue(String name, float value){
   Serial.print(name);
   Serial.print(":");
   Serial.println(value);
-}
-
-static inline float wrapPi(float a) {
-    while (a <= -PI) a += 2 * PI;
-    while (a >   PI) a -= 2 * PI;
-    return a;              // wynik w zakresie (−π, π]
-}
-
-static inline float wrap2Pi(float a) {
-    while (a < 0.0f)     a += 2.0f * PI;
-    while (a >= 2.0f*PI) a -= 2.0f * PI;
-    return a;
 }
