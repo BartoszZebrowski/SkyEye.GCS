@@ -1,24 +1,27 @@
 #include <SimpleFOC.h>
 #include <Adafruit_BNO08x.h>
 #include <math.h>
-#include <quaternion_type.h>
-#include <PID_v1.h>
 
 #define DEG2RAD(x)  ((x)*PI/180.0f)
 #define DEBUG 1
 
+/// @brief Struktura reprezentująca kwaternion.
+/// Umożliwia normalizację, mnożenie oraz konwersję do/z kątów Eulera.
 struct Quaternion {
   float w,x,y,z;
   
+  /// @brief Konstruktor kwaternionu.
   constexpr Quaternion(float _w=1,float _x=0,float _y=0,float _z=0)
     :w(_w),x(_x),y(_y),z(_z){}
   
+  /// @brief Normalizuje kwaternion do jednostkowej długości.
   inline void norm()
   {
      float n=sqrtf(w*w+x*x+y*y+z*z); 
      if(n){w/=n;x/=n;y/=n;z/=n;} 
   }
   
+  /// @brief Operator mnożenia kwaternionów.
   inline Quaternion operator*(const Quaternion& q) const {
     return { w*q.w - x*q.x - y*q.y - z*q.z,
              w*q.x + x*q.w + y*q.z - z*q.y,
@@ -26,6 +29,7 @@ struct Quaternion {
              w*q.z + x*q.y - y*q.x + z*q.w }; 
   }
   
+  /// @brief Tworzy kwaternion na podstawie kątów Eulera w stopniach.
   static Quaternion fromEulerDeg(float rD,float pD,float yD){
     const float r=DEG2RAD(rD)*0.5f, p=DEG2RAD(pD)*0.5f, y=DEG2RAD(yD)*0.5f;
     const float cr=cosf(r), sr=sinf(r), cp=cosf(p), sp=sinf(p), cy=cosf(y), sy=sinf(y);
@@ -33,6 +37,7 @@ struct Quaternion {
              cr*sp*cy + sr*cp*sy,  cr*cp*sy - sr*sp*cy };
   }
   
+  /// @brief Konwertuje kwaternion do kątów Eulera (radiany).
   void toEuler(float& roll,float& pitch,float& yaw) const {
     roll  = atan2f(2*(w*x+y*z), 1-2*(x*x+y*y));
     const float s = 2*(w*y - z*x);
@@ -54,6 +59,7 @@ int splitCommand(String input, String parts[], char delimiter = ';');
 void print(String message);
 void debugValue(String name, float value);
 
+/// @brief Typy zdalnych zmiennych.
 enum RemoteVariableType{
   Ping = 0,
   WorkingMode,
@@ -99,9 +105,13 @@ float horizontalTargetAngle = 0;
 
 Commander command = Commander(Serial);
 
+/// @brief Funkcja obsługi komendy ustawienia kąta docelowego.
 void doTarget(char* cmd) { command.scalar(&verticalTargetAngle, cmd); }
+
+/// @brief Funkcja obsługi komendy silnika.
 void doMotor(char* cmd) { command.motor(&verticalMotor, cmd); } 
 
+/// @brief Konfiguracja początkowa.
 void setup() {
   Wire.setClock(400000);
   Serial.begin(115200);
@@ -117,6 +127,7 @@ void setup() {
   startTime = micros();
 }
 
+/// @brief Główna pętla programu.
 void loop() {
   if(!DEBUG)
   {
@@ -129,6 +140,7 @@ void loop() {
   command.run();
 }
 
+/// @brief Konfiguracja silnika pionowego.
 void configureVerticalMotor(){
   verticalMotorSensor.init();
   verticalMotor.linkSensor(&verticalMotorSensor);
@@ -160,6 +172,7 @@ void configureVerticalMotor(){
   print(F("Vertical motor ready."));
 }
 
+/// @brief Konfiguracja silnika poziomego.
 void configureHorizontalMotor(){
   horizontalMotorSensor.init();
   horizontalMotor.linkSensor(&horizontalMotorSensor);
@@ -192,6 +205,7 @@ void configureHorizontalMotor(){
   print(F("Horizontal motor ready."));
 }
 
+/// @brief Konfiguracja IMU.
 void configureIMU(){
   if (!bno085.begin_I2C()) {
     print("Failed to find BNO08x chip");
@@ -204,6 +218,7 @@ void configureIMU(){
   setReportsIMU();
 }
 
+/// @brief Obsługa danych z IMU.
 void loopIMU(){
   if (bno085.wasReset()) {
     print("sensor was reset ");
@@ -225,6 +240,7 @@ void loopIMU(){
   }
 }
 
+/// @brief Włączenie raportowania wektorów rotacji z IMU.
 void setReportsIMU()
 {
   if (!bno085.enableReport(SH2_GAME_ROTATION_VECTOR)) {
@@ -234,6 +250,7 @@ void setReportsIMU()
   bno085.enableReport(SH2_GAME_ROTATION_VECTOR, 2000);
 }
 
+/// @brief Stabilizacja obrazu przy użyciu IMU i FOC.
 void doStabilization() {
   static const Quaternion rot90 = Quaternion::fromEulerDeg(0,90,0);
   Quaternion rotated = rot90 * imuQ;
@@ -251,6 +268,7 @@ void doStabilization() {
   horizontalMotor.loopFOC();
 }
 
+/// @brief Obsługa komunikacji z systemem zewnętrznym.
 void doCommunication(){
   unsigned long now = millis();
   String response;
@@ -274,11 +292,13 @@ void doCommunication(){
   }
 }
 
+/// @brief Wysyła żądanie odczytu zmiennej zdalnej.
 void sendRequest(RemoteVariableType variable) {
   String message = String((int)variable) + ";0;0\n";
   Serial.print(message);
 }
 
+/// @brief Obsługa pojedynczej komendy z komunikacji.
 void handleCommand(String parts[], int count) {
   String command = parts[0];
 
@@ -295,6 +315,7 @@ void handleCommand(String parts[], int count) {
   }
 }
 
+/// @brief Dzieli wiadomość na części wg delimitera.
 int splitCommand(String input, String parts[], char delimiter = ';') {
   int startIndex = 0;
   int partIndex = 0;
@@ -310,6 +331,7 @@ int splitCommand(String input, String parts[], char delimiter = ';') {
   return partIndex;
 }
 
+/// @brief Wypisuje wiadomość w trybie DEBUG.
 void print(String message){
   if(!DEBUG) 
     return; 
@@ -317,6 +339,7 @@ void print(String message){
   Serial.println(message);
 }
 
+/// @brief Wypisuje zmienną i jej wartość w trybie DEBUG.
 void debugValue(String name, float value){
   if(!DEBUG) 
     return; 
