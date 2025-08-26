@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace SkyEye.Connector.MessagesService
 {
+    /// <summary>
+    /// Typy zdalnych wartości przesyłanych między urządzeniami.
+    /// </summary>
     public enum RemoteValueType
     {
         Ping = 0,

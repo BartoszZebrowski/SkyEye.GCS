@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace SkyEye.Connector.Models
 {
+    /// <summary>
+    /// Tryby pracy systemu.
+    /// </summary>
     public enum WorkingMode
     {
         ManualMode,
