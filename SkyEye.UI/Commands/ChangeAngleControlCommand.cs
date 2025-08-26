@@ -9,7 +9,7 @@ using System.Windows.Input;
 
 namespace SkyEye.UI.Commands
 {
-    public class IncreesAngleControlCommand : ICommand
+    public class ChangeAngleControlCommand : ICommand
     {
         private static float _step = 0.1f;
 
@@ -18,7 +18,7 @@ namespace SkyEye.UI.Commands
         private RemoteValue<float> _horisonalAxisRemoteValue;
         private RemoteValue<float> _verticalAxisRemoteValue;
 
-        public IncreesAngleControlCommand(Datalink datalink)
+        public ChangeAngleControlCommand(Datalink datalink)
         {
             _horisonalAxisRemoteValue = datalink.GetRemoteValue<float>(RemoteValueType.TargetHorizontalAngle);
             _verticalAxisRemoteValue = datalink.GetRemoteValue<float>(RemoteValueType.TargetVerticalAngle);

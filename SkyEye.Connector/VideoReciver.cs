@@ -25,37 +25,31 @@ namespace SkyEye.Connector
         public async Task Init()
         {
             Application.Init();
-
-
             _pipeline = Parse.Launch("udpsrc port=9002 caps=\"application/x-rtp, payload=96\" ! rtph264depay ! h264parse ! openh264dec ! videoconvert ! video/x-raw, format=RGB ! appsink name=\"mysink\" max-buffers=50 drop=true") as Pipeline;
-
             var sink = _pipeline.GetByName("mysink");
 
-            if (sink != null)
+            if (sink == null)
+                return;
+
+            var sinkPad = sink.GetStaticPad("sink");
+
+            sinkPad.AddProbe(PadProbeType.Buffer, (pad, info) =>
             {
-                var sinkPad = sink.GetStaticPad("sink");
-
-                sinkPad.AddProbe(PadProbeType.Buffer, (pad, info) =>
+                using (var buffer = info.Buffer)
                 {
-                    using (var buffer = info.Buffer)
-                    {
-                        buffer.Map(out MapInfo mapInfo, MapFlags.Read);
+                    buffer.Map(out MapInfo mapInfo, MapFlags.Read);
 
-                        byte[] data = new byte[mapInfo.Data.Length];
-                        byte[] image;
+                    byte[] data = new byte[mapInfo.Data.Length];
+                    byte[] image;
 
-                        System.Array.Copy(mapInfo.Data, data, mapInfo.Data.Length);
+                    System.Array.Copy(mapInfo.Data, data, mapInfo.Data.Length);
 
-                        _newFrameRecived.Invoke(data);
+                    _newFrameRecived.Invoke(data);
 
-                        Console.WriteLine($"Odebrano {mapInfo.Size} bajtów danych.");
-
-                        buffer.Unmap(mapInfo);
-
-                        return PadProbeReturn.Ok;
-                    }
-                });
-            }
+                    buffer.Unmap(mapInfo);
+                    return PadProbeReturn.Ok;
+                }
+            });
         }
 
         public void Play()

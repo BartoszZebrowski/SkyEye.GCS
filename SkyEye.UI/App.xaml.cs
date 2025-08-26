@@ -56,7 +56,7 @@ namespace SkyEye.UI
                 5001,
                 ServiceProvider.GetRequiredService<Datalink>()));
 
-            serviceCollection.AddSingleton<IncreesAngleControlCommand>();
+            serviceCollection.AddSingleton<ChangeAngleControlCommand>();
             serviceCollection.AddSingleton<ChangeModeCommand>();
             serviceCollection.AddSingleton<ChangeZoomCommand>();
             serviceCollection.AddSingleton<DroneView>();

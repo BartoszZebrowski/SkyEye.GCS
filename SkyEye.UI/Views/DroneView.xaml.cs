@@ -38,25 +38,8 @@ namespace SkyEye.UI.Views
             _videoTimer.Tick += RenderVideo;
             _videoTimer.Start();
 
-            _hud.SizeChanged += UpdateSize;
         }
 
-        private void UpdateSize(object sender, SizeChangedEventArgs e)
-        {
-            double centerX = (_hud.ActualWidth - _gimbalPositionAreaEllipse.Width) / 2;
-            double centerY = (_hud.ActualHeight - _gimbalPositionAreaEllipse.Height) / 2;
-            _gimbalPositionAreaEllipseTransform.X = centerX;
-            _gimbalPositionAreaEllipseTransform.Y = centerY;
-        }
-
-        private void UpdateStabilizatorPosition()
-        {
-            double centerX = (_hud.ActualWidth - _gimbalPositionAreaEllipse.Width) / 2;
-            double centerY = (_hud.ActualHeight - _gimbalPositionAreaEllipse.Height) / 2;
-
-            _gimbalPositionDotTransform.X = centerX + _droneViewModel.VerticalAxis;
-            _gimbalPositionDotTransform.X = centerX + _droneViewModel.HorisonalAxis;
-        }
 
         private void OnNewFrameRecived(byte[] data)
         {

@@ -13,7 +13,6 @@ namespace SkyEye.Connector.MessagesService
         public event Action<T> ValueChanged;
 
         public RemoteValueType RemoteValueType { get; init; }
-        public RemoteValueMode RemoteValueMode { get; init; }
 
         private bool _toUpdate = false;
         public bool ToUpdate 
@@ -38,10 +37,9 @@ namespace SkyEye.Connector.MessagesService
             }
         }
 
-        public RemoteValue(RemoteValueType remoteValueType, RemoteValueMode remoteValueMode)
+        public RemoteValue(RemoteValueType remoteValueType)
         {
             RemoteValueType = remoteValueType;
-            RemoteValueMode = remoteValueMode;
         }
 
         internal void UpdateValue(T value)
